@@ -18,7 +18,7 @@ var (
 	maxNonce = math.MaxInt64
 )
 
-const targetBits = 24
+const targetBits = 17
 
 /*
 ProofOfWork type is datastructure for PoW
@@ -76,7 +76,7 @@ func (pow *ProofOfWork) Run() (int, []byte) {
 			break
 		}
 
-		nonce = nonce+1
+		nonce = nonce + 1
 	}
 
 	fmt.Print("\n\n")
