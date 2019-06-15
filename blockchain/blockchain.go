@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"./block"
+	"./proofofwork"
 )
 
 /*
@@ -31,8 +32,14 @@ func (bc *Blockchain) AddBlock(data string) {
 NewBlock function creates a new block.  It takes the data for block and its
 previous block hash and returns pointer to the new block
 */
-func NewBlock(data string, prevBlockHash []byte) *Block {
-	block := &Block{time.Now().Unix(), []byte(data), prevBlockHash, []byte{}, 0}
+func NewBlock(data string, prevBlockHash []byte) *block.Block {
+	block := &block.Block{
+		Timestamp:     time.Now().Unix(),
+		Data:          []byte(data),
+		PrevBlockHash: prevBlockHash,
+		Hash:          []byte{},
+		Nonce:         0,
+	}
 	pow := proofofwork.NewProofOfWork(block)
 
 	nonce, hash := pow.Run()
