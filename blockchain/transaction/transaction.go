@@ -14,7 +14,7 @@ type Transaction struct {
 
 // TxInput is a transaction input
 type TxInput struct {
-	TxID      []byte
+	Txid      []byte
 	Vout      int
 	ScriptSig string
 }
