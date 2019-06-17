@@ -10,8 +10,8 @@ import (
 	"math"
 	"math/big"
 
-	"../block"
-	"../utils"
+	"github.com/nlern/go-blockchain/blockchain/block"
+	"github.com/nlern/go-blockchain/blockchain/proofofwork/utils"
 )
 
 var (
