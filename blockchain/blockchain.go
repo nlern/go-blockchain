@@ -9,11 +9,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/nlern/go-blockchain/blockchain/transaction"
+	"github.com/nlern/blockchain_go/blockchain/transaction"
 
 	"github.com/boltdb/bolt"
-	"github.com/nlern/go-blockchain/blockchain/block"
-	"github.com/nlern/go-blockchain/blockchain/proofofwork"
+	"github.com/nlern/blockchain_go/blockchain/block"
+	"github.com/nlern/blockchain_go/blockchain/proofofwork"
 )
 
 const (

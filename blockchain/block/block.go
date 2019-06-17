@@ -9,7 +9,7 @@ import (
 	"encoding/gob"
 	"log"
 
-	"github.com/nlern/go-blockchain/blockchain/transaction"
+	"github.com/nlern/blockchain_go/blockchain/transaction"
 )
 
 /*
