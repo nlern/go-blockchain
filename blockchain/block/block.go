@@ -39,8 +39,7 @@ func (b *Block) Serialize() []byte {
 }
 
 /*
-DeserializeBlock deserializes a byte array to block structure and returns
-pointer to decoded block
+DeserializeBlock deserializes an encoded block and returns decoded block
 */
 func DeserializeBlock(d []byte) *Block {
 	var block Block
