@@ -130,6 +130,10 @@ func (bc *Blockchain) Iterate() *Iterator {
 	return i
 }
 
+func (bc *Blockchain) CloseDB() {
+	bc.db.Close()
+}
+
 /*
 NewGenesisBlock method generates the first block or Genesis block
 of a blockchain and returns a pointer to the block

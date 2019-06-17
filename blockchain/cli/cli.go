@@ -13,7 +13,7 @@ import (
 
 // CLI responsible for processing command line arguments
 type CLI struct {
-	bc *blockchain.Blockchain
+	BC *blockchain.Blockchain
 }
 
 func (cli *CLI) printUsage() {
@@ -32,15 +32,15 @@ func (cli *CLI) validateArgs() {
 func (cli *CLI) addBlock(data string) {
 	fmt.Printf("Adding %q to the chain\n", data)
 
-	cli.bc.AddBlock(data)
+	cli.BC.AddBlock(data)
 
 	fmt.Printf("Successfully added %q to the chain!\n", data)
 }
 
 func (cli *CLI) printChain() {
-	iterator := cli.bc.Iterate()
+	iterator := cli.BC.Iterate()
 
-	fmt.Println("Printing chain...")
+	fmt.Printf("Printing chain...\n\n")
 
 	for {
 		block := iterator.Next()
