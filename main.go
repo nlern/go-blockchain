@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/nlern/blockchain_go/blockchain/cli"
+	"github.com/nlern/go-blockchain/blockchain/cli"
 )
 
 func main() {

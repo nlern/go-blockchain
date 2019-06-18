@@ -10,15 +10,15 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/nlern/blockchain_go/blockchain/block"
-	"github.com/nlern/blockchain_go/blockchain/proofofwork/utils"
+	"github.com/nlern/go-blockchain/blockchain/block"
+	"github.com/nlern/go-blockchain/blockchain/proofofwork/utils"
 )
 
 var (
 	maxNonce = math.MaxInt64
 )
 
-const targetBits = 17
+const targetBits = 16
 
 /*
 ProofOfWork type is datastructure for PoW

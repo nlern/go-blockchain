@@ -43,10 +43,20 @@ type TxInput struct {
 	ScriptSig string
 }
 
+// CanUnlockOutputWith checks whether the address initiated the transaction
+func (in *TxInput) CanUnlockOutputWith(unlockingData string) bool {
+	return in.ScriptSig == unlockingData
+}
+
 // TxOutput is a transaction output
 type TxOutput struct {
 	Value        int
 	ScriptPubKey string
+}
+
+// CanBeUnlockedWith checks if the output can be unlocked with the provided data
+func (out *TxOutput) CanBeUnlockedWith(unlockingData string) bool {
+	return out.ScriptPubKey == unlockingData
 }
 
 // NewCoinbaseTX creates a new coinbase transaction for address `to`

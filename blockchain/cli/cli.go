@@ -7,9 +7,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/nlern/blockchain_go/blockchain"
+	"github.com/nlern/go-blockchain/blockchain"
 
-	"github.com/nlern/blockchain_go/blockchain/proofofwork"
+	"github.com/nlern/go-blockchain/blockchain/proofofwork"
 )
 
 // CLI responsible for processing command line arguments
