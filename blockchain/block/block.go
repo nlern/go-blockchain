@@ -5,8 +5,11 @@ package block
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/gob"
 	"log"
+
+	"github.com/nlern/go-blockchain/blockchain/transaction"
 )
 
 /*
@@ -15,16 +18,27 @@ a blockchain
 */
 type Block struct {
 	Timestamp     int64
-	Data          []byte
+	Transactions  []*transaction.Transaction
 	PrevBlockHash []byte
 	Hash          []byte
 	Nonce         int
 }
 
-/*
-Serialize serializes block structure into byte array and returns slice
-of the array
-*/
+// HashTransactions returns a hash of the transactions in the block
+func (b *Block) HashTransactions() []byte {
+	var txHashes [][]byte
+	var txHash [32]byte
+
+	for _, tx := range b.Transactions {
+		txHashes = append(txHashes, tx.ID)
+	}
+
+	txHash = sha256.Sum256(bytes.Join(txHashes, []byte{}))
+	return txHash[:]
+}
+
+// Serialize serializes block structure into byte array and returns slice
+// of the array
 func (b *Block) Serialize() []byte {
 	var result bytes.Buffer
 	encoder := gob.NewEncoder(&result)
@@ -38,9 +52,7 @@ func (b *Block) Serialize() []byte {
 	return result.Bytes()
 }
 
-/*
-DeserializeBlock deserializes an encoded block and returns decoded block
-*/
+// DeserializeBlock deserializes an encoded block and returns decoded block
 func DeserializeBlock(d []byte) *Block {
 	var block Block
 
