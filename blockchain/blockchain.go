@@ -149,8 +149,8 @@ func (bc *Blockchain) FindUnspentTransactions(address string) []transaction.Tran
 	return unspentTXs
 }
 
-// FindUTXO finds and returns all unspent transaction outputs
-func (bc *Blockchain) FindUTXO(address string) []transaction.TxOutput {
+// FindUTXOs finds and returns all unspent transaction outputs
+func (bc *Blockchain) FindUTXOs(address string) []transaction.TxOutput {
 	var UTXOs []transaction.TxOutput
 	unspentTransactions := bc.FindUnspentTransactions(address)
 
@@ -203,7 +203,7 @@ func NewGenesisBlock(coinbase *transaction.Transaction) *block.Block {
 	return NewBlock([]*transaction.Transaction{coinbase}, []byte{})
 }
 
-// NewBlockchain creates a new blockchain with genesis block
+// NewBlockchain returns a new pointer to existing blockchain
 func NewBlockchain() *Blockchain {
 	if dbExists() == false {
 		fmt.Println("No existing blockchain found, create one first.")
