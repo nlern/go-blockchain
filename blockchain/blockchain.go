@@ -1,9 +1,8 @@
-/*
-Package blockchain contains datastructures, methods related to blockchain
-*/
+// Package blockchain contains datastructures, methods related to blockchain
 package blockchain
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log"
 	"os"
@@ -102,6 +101,68 @@ func (bc *Blockchain) MineBlock(transactions []*transaction.Transaction) {
 	if err != nil {
 		log.Panic(err)
 	}
+}
+
+// FindUnspentTransactions returns a list of transactions containing
+// unspent outputs for a given address
+func (bc *Blockchain) FindUnspentTransactions(address string) []transaction.Transaction {
+	var unspentTXs []transaction.Transaction
+	spentTXOs := make(map[string][]int)
+	bci := bc.Iterate()
+
+	for {
+		block := bci.Next()
+
+		for _, tx := range block.Transactions {
+			txID := hex.EncodeToString(tx.ID)
+
+		Outputs:
+			for outIdx, out := range tx.Vout {
+				// Was the output spent?
+				if _, pres := spentTXOs[txID]; pres == true {
+					for _, spentOut := range spentTXOs[txID] {
+						if spentOut == outIdx {
+							continue Outputs
+						}
+					}
+				}
+
+				if out.CanBeUnlockedWith(address) {
+					unspentTXs = append(unspentTXs, *tx)
+				}
+			}
+
+			if tx.IsCoinBase() == false {
+				for _, in := range tx.Vin {
+					if in.CanUnlockOutputWith(address) {
+						inTxID := hex.EncodeToString(in.Txid)
+						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Vout)
+					}
+				}
+			}
+		}
+		if len(block.PrevBlockHash) == 0 {
+			break
+		}
+	}
+
+	return unspentTXs
+}
+
+// FindUTXO finds and returns all unspent transaction outputs
+func (bc *Blockchain) FindUTXO(address string) []transaction.TxOutput {
+	var UTXOs []transaction.TxOutput
+	unspentTransactions := bc.FindUnspentTransactions(address)
+
+	for _, tx := range unspentTransactions {
+		for _, out := range tx.Vout {
+			if out.CanBeUnlockedWith(address) {
+				UTXOs = append(UTXOs, out)
+			}
+		}	
+	}
+
+	return UTXOs
 }
 
 // NewBlock creates and returns transaction
