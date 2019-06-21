@@ -1,6 +1,5 @@
-/*
-Package utils provide helper utilities
-*/
+// Package utils contains internal helper functions for
+// blockchain commands
 package utils
 
 import (
@@ -9,9 +8,7 @@ import (
 	"log"
 )
 
-/*
-IntToHex method converts a int64 number to byte array
-*/
+// IntToHex method converts a int64 number to byte array
 func IntToHex(num int64) []byte {
 	buff := new(bytes.Buffer)
 	err := binary.Write(buff, binary.BigEndian, num)
