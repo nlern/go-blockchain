@@ -1,11 +1,13 @@
-package operations
+package txoperations
 
 import (
 	"encoding/hex"
 	"log"
 
 	"github.com/nlern/go-blockchain/blockchain"
-	"github.com/nlern/go-blockchain/blockchain/transaction"
+	"github.com/nlern/go-blockchain/transaction"
+	"github.com/nlern/go-blockchain/utils"
+	"github.com/nlern/go-blockchain/wallets"
 )
 
 // NewUTXOTransaction creates a new transaction
@@ -13,10 +15,17 @@ func NewUTXOTransaction(from, to string, amount int, bc *blockchain.Blockchain) 
 	var inputs []transaction.TxInput
 	var outputs []transaction.TxOutput
 
-	actualBalance, unspentOutputs := bc.FindSpendableOutputs(from, amount)
+	ws, err := wallets.NewWallets()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	senderWallet := ws.GetWallet(from)
+	senderPubKeyHash := utils.HashPublicKey(senderWallet.PublicKey)
+	actualBalance, unspentOutputs := bc.FindSpendableOutputs(senderPubKeyHash, amount)
 
 	if actualBalance < amount {
-		log.Panic("ERROR: not enough balance in sender")
+		log.Panic("ERROR: Sender has insufficient balance")
 	}
 
 	// Build a list of inputs
@@ -29,22 +38,18 @@ func NewUTXOTransaction(from, to string, amount int, bc *blockchain.Blockchain) 
 			input := transaction.TxInput{
 				Txid:      txID,
 				Vout:      out,
-				ScriptSig: from,
+				Signature: nil,
+				PubKey:    senderWallet.PublicKey,
 			}
 			inputs = append(inputs, input)
 		}
 	}
 
 	// Build a list of outputs
-	outputs = append(outputs, transaction.TxOutput{
-		Value:        amount,
-		ScriptPubKey: to,
-	})
+	outputs = append(outputs, *transaction.NewTxOutput(amount, to))
 	if actualBalance > amount {
-		outputs = append(outputs, transaction.TxOutput{
-			Value:        actualBalance - amount,
-			ScriptPubKey: from,
-		})
+		// sender's change
+		outputs = append(outputs, *transaction.NewTxOutput(actualBalance-amount, from))
 	}
 
 	tx := transaction.Transaction{
@@ -53,6 +58,7 @@ func NewUTXOTransaction(from, to string, amount int, bc *blockchain.Blockchain) 
 		Vout: outputs,
 	}
 	tx.SetID()
+	bc.SignTransaction(&tx, senderWallet.PrivateKey)
 
 	return &tx
 }
