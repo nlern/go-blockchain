@@ -23,7 +23,9 @@ func (cli *CLI) send(from, to string, amount int) {
 	fmt.Printf("Sending amount %d from %q to %q...\n\n", amount, from, to)
 
 	tx := txoperations.NewUTXOTransaction(from, to, amount, bc)
+	cbTx := transaction.NewCoinbaseTX(from, "")
+	txs := []*transaction.Transaction{cbTx, tx}
 
-	bc.MineBlock([]*transaction.Transaction{tx})
+	bc.MineBlock(txs)
 	fmt.Printf("Successfully sent amount %d from %q to %q\n", amount, from, to)
 }
