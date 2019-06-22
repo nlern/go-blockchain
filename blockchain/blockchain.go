@@ -24,6 +24,11 @@ type Blockchain struct {
 	db  *bolt.DB
 }
 
+// GetDB returns the blockchain db
+func (bc *Blockchain) GetDB() *bolt.DB {
+	return bc.db
+}
+
 // FindSpendableOutputs find and returns unspent outputs to reference in inputs
 func (bc *Blockchain) FindSpendableOutputs(pubKeyHash []byte, amount int) (int, map[string][]int) {
 	unspentOutputs := make(map[string][]int)
@@ -115,26 +120,9 @@ func (bc *Blockchain) FindUnspentTransactions(pubKeyHash []byte) []transaction.T
 	return unspentTXs
 }
 
-// FindUTXOs finds and returns all unspent transaction outputs
-// for a particular pubKeyHash
-func (bc *Blockchain) FindUTXOs(pubKeyHash []byte) []transaction.TxOutput {
-	var UTXOs []transaction.TxOutput
-	unspentTransactions := bc.FindUnspentTransactions(pubKeyHash)
-
-	for _, tx := range unspentTransactions {
-		for _, out := range tx.Vout {
-			if out.IsLockedWithKey(pubKeyHash) {
-				UTXOs = append(UTXOs, out)
-			}
-		}
-	}
-
-	return UTXOs
-}
-
-// FindAllUTXO finds all unspent transaction outputs and returns transactions
+// FindUTXO finds all unspent transaction outputs and returns transactions
 // with spent outputs removed
-func (bc *Blockchain) FindAllUTXO() map[string]transaction.TxOutputs {
+func (bc *Blockchain) FindUTXO() map[string]transaction.TxOutputs {
 	UTXO := make(map[string]transaction.TxOutputs)
 	spentTXOs := make(map[string][]int)
 	bci := bc.Iterator()
