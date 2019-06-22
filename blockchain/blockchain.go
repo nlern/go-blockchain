@@ -29,30 +29,6 @@ func (bc *Blockchain) GetDB() *bolt.DB {
 	return bc.db
 }
 
-// FindSpendableOutputs find and returns unspent outputs to reference in inputs
-func (bc *Blockchain) FindSpendableOutputs(pubKeyHash []byte, amount int) (int, map[string][]int) {
-	unspentOutputs := make(map[string][]int)
-	unspentTXs := bc.FindUnspentTransactions(pubKeyHash)
-	availableBalance := 0
-
-FindUnspentOutputs:
-	for _, tx := range unspentTXs {
-		txID := hex.EncodeToString(tx.ID)
-
-		for outIdx, out := range tx.Vout {
-			if availableBalance >= amount {
-				break FindUnspentOutputs
-			}
-			if out.IsLockedWithKey(pubKeyHash) {
-				availableBalance = availableBalance + out.Value
-				unspentOutputs[txID] = append(unspentOutputs[txID], outIdx)
-			}
-		}
-	}
-
-	return availableBalance, unspentOutputs
-}
-
 // FindTransaction finds a transaction by its id
 func (bc *Blockchain) FindTransaction(ID []byte) (transaction.Transaction, error) {
 	bci := bc.Iterator()
