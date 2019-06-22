@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"log"
 
+	"github.com/nlern/go-blockchain/block"
+
 	"github.com/nlern/go-blockchain/transaction"
 
 	"github.com/boltdb/bolt"
@@ -124,6 +126,62 @@ func (u UTXOSet) Reindex() {
 
 		return nil
 	})
+	if err != nil {
+		log.Panic(err)
+	}
+}
+
+// Update updates the UTXO set with transactions from the Block.
+// The Block is considered to be the tip of a blockchain
+func (u UTXOSet) Update(block *block.Block) {
+	db := u.blockchain.GetDB()
+	bucketName := []byte(utxoBucket)
+
+	err := db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(bucketName)
+
+		for _, tx := range block.Transactions {
+			if tx.IsCoinBase() == false {
+				for _, vin := range tx.Vin {
+					updatedOuts := transaction.TxOutputs{}
+					outBytes := bucket.Get(vin.Txid)
+					out, err := transaction.DeserializeOutputs(outBytes)
+					if err != nil {
+						return err
+					}
+
+					for outIdx, out := range out.Outputs {
+						if outIdx != vin.Vout {
+							updatedOuts.Outputs = append(updatedOuts.Outputs, out)
+						}
+					}
+
+					if len(updatedOuts.Outputs) == 0 {
+						err := bucket.Delete(vin.Txid)
+						if err != nil {
+							return err
+						}
+					} else {
+						err := bucket.Put(vin.Txid, updatedOuts.Serialize())
+						if err != nil {
+							return err
+						}
+					}
+				}
+			}
+
+			newOutputs := transaction.TxOutputs{}
+			newOutputs.Outputs = append(newOutputs.Outputs, tx.Vout...)
+
+			err := bucket.Put(tx.ID, newOutputs.Serialize())
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
 	if err != nil {
 		log.Panic(err)
 	}
