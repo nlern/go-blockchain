@@ -4,14 +4,14 @@ import (
 	"encoding/hex"
 	"log"
 
-	"github.com/nlern/go-blockchain/blockchain"
 	"github.com/nlern/go-blockchain/transaction"
 	"github.com/nlern/go-blockchain/utils"
+	"github.com/nlern/go-blockchain/utxoset"
 	"github.com/nlern/go-blockchain/wallets"
 )
 
 // NewUTXOTransaction creates a new transaction
-func NewUTXOTransaction(from, to string, amount int, bc *blockchain.Blockchain) *transaction.Transaction {
+func NewUTXOTransaction(from, to string, amount int, UTXOSet *utxoset.UTXOSet) *transaction.Transaction {
 	var inputs []transaction.TxInput
 	var outputs []transaction.TxOutput
 
@@ -22,7 +22,8 @@ func NewUTXOTransaction(from, to string, amount int, bc *blockchain.Blockchain) 
 
 	senderWallet := ws.GetWallet(from)
 	senderPubKeyHash := utils.HashPublicKey(senderWallet.PublicKey)
-	actualBalance, unspentOutputs := bc.FindSpendableOutputs(senderPubKeyHash, amount)
+
+	actualBalance, unspentOutputs := UTXOSet.FindSpendableOutputs(senderPubKeyHash, amount)
 
 	if actualBalance < amount {
 		log.Panic("ERROR: Sender has insufficient balance")
@@ -58,7 +59,8 @@ func NewUTXOTransaction(from, to string, amount int, bc *blockchain.Blockchain) 
 		Vout: outputs,
 	}
 	tx.SetID()
-	bc.SignTransaction(&tx, senderWallet.PrivateKey)
+
+	UTXOSet.Blockchain.SignTransaction(&tx, senderWallet.PrivateKey)
 
 	return &tx
 }

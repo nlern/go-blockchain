@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/nlern/go-blockchain/blockchain"
+	"github.com/nlern/go-blockchain/utxoset"
 	"github.com/nlern/go-blockchain/wallet"
 )
 
@@ -17,7 +18,10 @@ func (cli *CLI) createBlockchain(address string) {
 	fmt.Println()
 
 	bc := blockchain.CreateBlockchain(address)
-	bc.CloseDB()
+	UTXOSet := utxoset.UTXOSet{Blockchain: bc}
+	defer bc.CloseDB()
+
+	UTXOSet.Reindex()
 
 	fmt.Println("Successfully created blockchain!")
 }

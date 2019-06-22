@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/nlern/go-blockchain/utxoset"
+
 	"github.com/nlern/go-blockchain/blockchain"
 	"github.com/nlern/go-blockchain/transaction"
 	txoperations "github.com/nlern/go-blockchain/transaction/operations"
@@ -11,21 +13,33 @@ import (
 )
 
 func (cli *CLI) send(from, to string, amount int) {
+	fmt.Print("Verifying sender and receiver addresses...")
 	if wallet.ValidateAddress(from) == false {
 		log.Panic("ERROR: Sender address is not valid")
 	}
 	if wallet.ValidateAddress(to) == false {
 		log.Panic("ERROR: Recipient address is not valid")
 	}
+	fmt.Println(" Done")
 	bc := blockchain.NewBlockchain()
+	UTXOSet := utxoset.UTXOSet{Blockchain: bc}
 	defer bc.CloseDB()
 
-	fmt.Printf("Sending amount %d from %q to %q...\n\n", amount, from, to)
+	fmt.Print("Creating a new transaction...")
+	tx := txoperations.NewUTXOTransaction(from, to, amount, &UTXOSet)
+	fmt.Println(" Done")
 
-	tx := txoperations.NewUTXOTransaction(from, to, amount, bc)
+	fmt.Print("Creating a new coinbase transaction...")
 	cbTx := transaction.NewCoinbaseTX(from, "")
+	fmt.Println(" Done")
+
 	txs := []*transaction.Transaction{cbTx, tx}
 
-	bc.MineBlock(txs)
-	fmt.Printf("Successfully sent amount %d from %q to %q\n", amount, from, to)
+	newBlock := bc.MineBlock(txs)
+
+	fmt.Print("Updating UTXO sets...")
+	UTXOSet.Update(newBlock)
+	fmt.Println(" Done")
+
+	fmt.Println("Transaction successful!")
 }

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"log"
 
+	"github.com/nlern/go-blockchain/block"
 	"github.com/nlern/go-blockchain/transaction"
 
 	"github.com/boltdb/bolt"
@@ -42,7 +43,7 @@ func (bc *Blockchain) FindTransaction(ID []byte) (transaction.Transaction, error
 			}
 		}
 
-		if block.PrevBlockHash == nil {
+		if len(block.PrevBlockHash) == 0 {
 			break
 		}
 	}
@@ -142,7 +143,7 @@ func (bc *Blockchain) FindUTXO() map[string]transaction.TxOutputs {
 }
 
 // MineBlock mines a new block with provided transactions
-func (bc *Blockchain) MineBlock(transactions []*transaction.Transaction) {
+func (bc *Blockchain) MineBlock(transactions []*transaction.Transaction) *block.Block {
 	var lastHash []byte
 
 	for _, tx := range transactions {
@@ -184,6 +185,8 @@ func (bc *Blockchain) MineBlock(transactions []*transaction.Transaction) {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	return newBlock
 }
 
 // SignTransaction signs inputs of a transaction
@@ -204,6 +207,10 @@ func (bc *Blockchain) SignTransaction(tx *transaction.Transaction, privateKey ec
 
 // VerifyTransaction verifies inputs of a transaction
 func (bc *Blockchain) VerifyTransaction(tx *transaction.Transaction) bool {
+	if tx.IsCoinBase() {
+		return true
+	}
+
 	prevTxs := make(map[string]transaction.Transaction)
 
 	for _, vin := range tx.Vin {
