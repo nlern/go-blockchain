@@ -116,6 +116,7 @@ func (bc *Blockchain) FindUnspentTransactions(pubKeyHash []byte) []transaction.T
 }
 
 // FindUTXOs finds and returns all unspent transaction outputs
+// for a particular pubKeyHash
 func (bc *Blockchain) FindUTXOs(pubKeyHash []byte) []transaction.TxOutput {
 	var UTXOs []transaction.TxOutput
 	unspentTransactions := bc.FindUnspentTransactions(pubKeyHash)
@@ -129,6 +130,51 @@ func (bc *Blockchain) FindUTXOs(pubKeyHash []byte) []transaction.TxOutput {
 	}
 
 	return UTXOs
+}
+
+// FindAllUTXO finds all unspent transaction outputs and returns transactions
+// with spent outputs removed
+func (bc *Blockchain) FindAllUTXO() map[string]transaction.TxOutputs {
+	UTXO := make(map[string]transaction.TxOutputs)
+	spentTXOs := make(map[string][]int)
+	bci := bc.Iterator()
+
+	for {
+		block := bci.Next()
+
+		for _, tx := range block.Transactions {
+			txID := hex.EncodeToString(tx.ID)
+
+		Output:
+			for outIdx, out := range tx.Vout {
+				// Was the output spent?
+				if spentTXOs[txID] != nil {
+					for _, spentOutIdx := range spentTXOs[txID] {
+						if spentOutIdx == outIdx {
+							continue Output
+						}
+					}
+				}
+
+				outs := UTXO[txID]
+				outs.Outputs = append(outs.Outputs, out)
+				UTXO[txID] = outs
+			}
+
+			if tx.IsCoinBase() == false {
+				for _, in := range tx.Vin {
+					inTxID := hex.EncodeToString(in.Txid)
+					spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Vout)
+				}
+			}
+		}
+
+		if len(block.PrevBlockHash) == 0 {
+			break
+		}
+	}
+
+	return UTXO
 }
 
 // MineBlock mines a new block with provided transactions
