@@ -44,7 +44,7 @@ func handleConnection(conn net.Conn, bc *blockchain.Blockchain) {
 
 func handleGetBlocks(request []byte, bc *blockchain.Blockchain) {
 	var payload version
-	err := utils.Deserialize(nil, request, &payload)
+	err := utils.Deserialize(nil, request[commandLength:], &payload)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -55,7 +55,7 @@ func handleGetBlocks(request []byte, bc *blockchain.Blockchain) {
 
 func handleInv(request []byte, bc *blockchain.Blockchain) {
 	var payload inv
-	err := utils.Deserialize(nil, request, &payload)
+	err := utils.Deserialize(nil, request[commandLength:], &payload)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -88,7 +88,7 @@ func handleInv(request []byte, bc *blockchain.Blockchain) {
 
 func handleVersion(request []byte, bc *blockchain.Blockchain) {
 	var payload version
-	err := utils.Deserialize(nil, request, &payload)
+	err := utils.Deserialize(nil, request[commandLength:], &payload)
 	if err != nil {
 		log.Panic(err)
 	}
