@@ -4,6 +4,12 @@ type getBlocks struct {
 	AddrFrom string
 }
 
+type getData struct {
+	AddrFrom string
+	Type     string
+	ID       []byte
+}
+
 type inv struct {
 	AddrFrom string
 	Type     string

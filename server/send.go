@@ -45,6 +45,16 @@ func sendGetBlocks(address string) {
 	sendData(address, request)
 }
 
+func sendGetData(address, kind string, id []byte) {
+	payload, err := utils.Serialize(nil, &getData{address, kind, id})
+	if err != nil {
+		log.Panic(err)
+	}
+
+	request := append(commandToBytes("getdata"), payload...)
+	sendData(address, request)
+}
+
 func sendInv(address string, kind string, items [][]byte) {
 	inventory := inv{address, kind, items}
 
