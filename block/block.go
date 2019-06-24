@@ -4,10 +4,9 @@ Package block contains datastructures, methods related to block of a blockchain
 package block
 
 import (
-	"bytes"
-	"crypto/sha256"
 	"log"
 
+	"github.com/nlern/go-blockchain/merkletree"
 	"github.com/nlern/go-blockchain/utils"
 
 	"github.com/nlern/go-blockchain/transaction"
@@ -27,15 +26,15 @@ type Block struct {
 
 // HashTransactions returns a hash of the transactions in the block
 func (b *Block) HashTransactions() []byte {
-	var txHashes [][]byte
-	var txHash [32]byte
+	var transactions [][]byte
 
 	for _, tx := range b.Transactions {
-		txHashes = append(txHashes, tx.ID)
+		transactions = append(transactions, tx.Serialize())
 	}
 
-	txHash = sha256.Sum256(bytes.Join(txHashes, []byte{}))
-	return txHash[:]
+	mTree := merkletree.NewMerkleTree(transactions)
+	
+	return mTree.RootNode.Data
 }
 
 // Serialize serializes block structure into byte array and returns slice

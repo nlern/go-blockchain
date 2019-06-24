@@ -58,14 +58,23 @@ func (tx *Transaction) IsCoinBase() bool {
 	return len(tx.Vin) == 1 && len(tx.Vin[0].Txid) == 0 && tx.Vin[0].Vout == -1
 }
 
-// SetID sets ID of a transaction
-func (tx *Transaction) SetID() {
-	var hash [32]byte
-	encoded, err := utils.Serialize(nil, tx)
+// Serialize returns a serialized transaction
+func (tx *Transaction) Serialize() []byte {
+	serialized, err := utils.Serialize(nil, tx)
 	if err != nil {
 		log.Panic(err)
 	}
-	hash = sha256.Sum256(encoded)
+	return serialized
+}
+
+// SetID sets ID of a transaction
+func (tx *Transaction) SetID() {
+	var hash [32]byte
+
+	txCopy := *tx
+	txCopy.ID = []byte{}
+	
+	hash = sha256.Sum256(txCopy.Serialize())
 	tx.ID = hash[:]
 }
 
