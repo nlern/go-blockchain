@@ -9,13 +9,14 @@ import (
 )
 
 // NewBlock creates and returns a new block contaiing transactions
-func NewBlock(transactions []*transaction.Transaction, prevBlockHash []byte) *block.Block {
+func NewBlock(transactions []*transaction.Transaction, prevBlockHash []byte, height int) *block.Block {
 	block := &block.Block{
 		Timestamp:     time.Now().Unix(),
 		Transactions:  transactions,
 		PrevBlockHash: prevBlockHash,
 		Hash:          []byte{},
 		Nonce:         0,
+		Height:        height,
 	}
 	pow := proofofwork.NewProofOfWork(block)
 

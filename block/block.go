@@ -22,6 +22,7 @@ type Block struct {
 	PrevBlockHash []byte
 	Hash          []byte
 	Nonce         int
+	Height        int
 }
 
 // HashTransactions returns a hash of the transactions in the block
@@ -33,7 +34,7 @@ func (b *Block) HashTransactions() []byte {
 	}
 
 	mTree := merkletree.NewMerkleTree(transactions)
-	
+
 	return mTree.RootNode.Data
 }
 

@@ -25,9 +25,9 @@ type Blockchain struct {
 	db  *bolt.DB
 }
 
-// GetDB returns the blockchain db
-func (bc *Blockchain) GetDB() *bolt.DB {
-	return bc.db
+// CloseDB closes the blockchain db
+func (bc *Blockchain) CloseDB() {
+	bc.db.Close()
 }
 
 // FindTransaction finds a transaction by its id
@@ -142,9 +142,61 @@ func (bc *Blockchain) FindUTXO() map[string]transaction.TxOutputs {
 	return UTXO
 }
 
+// GetBestHeight returns the height of the latest block
+func (bc *Blockchain) GetBestHeight() int {
+	var lastBlock block.Block
+
+	err := bc.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(blocksBucket))
+		lastHash := bucket.Get([]byte("l"))
+		blockData := bucket.Get(lastHash)
+		lastBlock = *block.DeserializeBlock(blockData)
+
+		return nil
+	})
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return lastBlock.Height
+}
+
+// GetBlockHashes returns a list of hashes of all the blocks in the chain
+func (bc *Blockchain) GetBlockHashes() [][]byte {
+	var blockHashes [][]byte
+	iterator := bc.Iterator()
+
+	for {
+		block := iterator.Next()
+
+		blockHashes = append(blockHashes, block.Hash)
+
+		if len(block.PrevBlockHash) == 0 {
+			break
+		}
+	}
+
+	return blockHashes
+}
+
+// GetDB returns the blockchain db
+func (bc *Blockchain) GetDB() *bolt.DB {
+	return bc.db
+}
+
+// Iterator instantiates a blockchain iterator and returns the iterator
+func (bc *Blockchain) Iterator() *Iterator {
+	i := &Iterator{bc.tip, bc.db}
+
+	return i
+}
+
 // MineBlock mines a new block with provided transactions
 func (bc *Blockchain) MineBlock(transactions []*transaction.Transaction) *block.Block {
-	var lastHash []byte
+	var (
+		lastHash   []byte
+		lastHeight int
+	)
 
 	for _, tx := range transactions {
 		if bc.VerifyTransaction(tx) == false {
@@ -155,6 +207,10 @@ func (bc *Blockchain) MineBlock(transactions []*transaction.Transaction) *block.
 	err := bc.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucket))
 		lastHash = b.Get([]byte("l"))
+		blockData := b.Get(lastHash)
+		lastBlock := *block.DeserializeBlock(blockData)
+
+		lastHeight = lastBlock.Height
 
 		return nil
 	})
@@ -163,7 +219,7 @@ func (bc *Blockchain) MineBlock(transactions []*transaction.Transaction) *block.
 		log.Panic(err)
 	}
 
-	newBlock := NewBlock(transactions, lastHash)
+	newBlock := NewBlock(transactions, lastHash, lastHeight+1)
 
 	err = bc.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucket))
@@ -223,16 +279,4 @@ func (bc *Blockchain) VerifyTransaction(tx *transaction.Transaction) bool {
 	}
 
 	return tx.Verify(prevTxs)
-}
-
-// Iterator instantiates a blockchain iterator and returns the iterator
-func (bc *Blockchain) Iterator() *Iterator {
-	i := &Iterator{bc.tip, bc.db}
-
-	return i
-}
-
-// CloseDB closes the blockchain db
-func (bc *Blockchain) CloseDB() {
-	bc.db.Close()
 }

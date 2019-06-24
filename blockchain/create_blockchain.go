@@ -11,14 +11,14 @@ import (
 )
 
 // CreateBlockchain creates a new blockchain DB
-func CreateBlockchain(address string) *Blockchain {
-	if dbutils.Exists() {
+func CreateBlockchain(address string, nodeID string) *Blockchain {
+	if dbutils.Exists(nodeID) {
 		fmt.Println("Blockchain already exists.")
 		os.Exit(1)
 	}
 
 	var tip []byte
-	db, err := dbutils.Open()
+	db, err := dbutils.Open(nodeID)
 
 	if err != nil {
 		log.Panic(err)

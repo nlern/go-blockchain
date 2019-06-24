@@ -7,14 +7,14 @@ import (
 
 // Serialize serializes data and returns it with any error
 func Serialize(registerValue interface{}, data interface{}) ([]byte, error) {
-	var result bytes.Buffer
+	var buffer bytes.Buffer
 
 	if registerValue != nil {
 		gob.Register(registerValue)
 	}
 
-	encoder := gob.NewEncoder(&result)
+	encoder := gob.NewEncoder(&buffer)
 	err := encoder.Encode(data)
 
-	return result.Bytes(), err
+	return buffer.Bytes(), err
 }

@@ -7,5 +7,5 @@ import (
 
 // NewGenesisBlock creates and returns genesis block
 func NewGenesisBlock(coinbase *transaction.Transaction) *block.Block {
-	return NewBlock([]*transaction.Transaction{coinbase}, []byte{})
+	return NewBlock([]*transaction.Transaction{coinbase}, []byte{}, 0)
 }

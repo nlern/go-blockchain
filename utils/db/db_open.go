@@ -1,8 +1,13 @@
 package dbutils
 
-import "github.com/boltdb/bolt"
+import (
+	"fmt"
+
+	"github.com/boltdb/bolt"
+)
 
 // Open opens a new db and returns
-func Open() (*bolt.DB, error) {
-	return bolt.Open(dbfile, 0600, nil)
+func Open(nodeID string) (*bolt.DB, error) {
+	dbFile := fmt.Sprintf(dbFile, nodeID)
+	return bolt.Open(dbFile, 0600, nil)
 }

@@ -10,14 +10,14 @@ import (
 )
 
 // NewBlockchain returns a new pointer to existing blockchain
-func NewBlockchain() *Blockchain {
-	if dbutils.Exists() == false {
+func NewBlockchain(nodeID string) *Blockchain {
+	if dbutils.Exists(nodeID) == false {
 		fmt.Println("No existing blockchain found, create one first.")
 		os.Exit(1)
 	}
 
 	var tip []byte
-	db, err := dbutils.Open()
+	db, err := dbutils.Open(nodeID)
 
 	if err != nil {
 		log.Panic(err)

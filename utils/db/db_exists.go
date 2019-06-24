@@ -1,14 +1,18 @@
 package dbutils
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 const (
-	dbfile = "blockchain.db"
+	dbFile = "blockchain_%s.db"
 )
 
 // Exists checks if database exists
-func Exists() bool {
-	if _, err := os.Stat(dbfile); os.IsNotExist(err) {
+func Exists(nodeID string) bool {
+	dbFile := fmt.Sprintf(dbFile, nodeID)
+	if _, err := os.Stat(dbFile); os.IsNotExist(err) {
 		return false
 	}
 	return true
