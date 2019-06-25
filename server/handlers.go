@@ -24,32 +24,6 @@ var (
 	memPool         = make(map[string]transaction.Transaction)
 )
 
-func handleConnection(conn net.Conn, bc *blockchain.Blockchain) {
-	request, err := ioutil.ReadAll(conn)
-	if err != nil {
-		log.Panic(err)
-	}
-	command := bytesToCommand(request[:commandLength])
-	fmt.Printf("Received %s command\n", command)
-
-	switch command {
-	case "block":
-		handleBlock(request, bc)
-	case "getblocks":
-		handleGetBlocks(request, bc)
-	case "getdata":
-		handleGetData(request, bc)
-	case "inv":
-		handleInv(request, bc)
-	case "version":
-		handleVersion(request, bc)
-	default:
-		fmt.Println("Unknown command!")
-	}
-
-	conn.Close()
-}
-
 func handleBlock(request []byte, bc *blockchain.Blockchain) {
 	var payload block
 	err := utils.Deserialize(nil, request[commandLength:], &payload)
@@ -74,6 +48,34 @@ func handleBlock(request []byte, bc *blockchain.Blockchain) {
 		UTXOSet := utxoset.UTXOSet{Blockchain: bc}
 		UTXOSet.Reindex()
 	}
+}
+
+func handleConnection(conn net.Conn, bc *blockchain.Blockchain) {
+	request, err := ioutil.ReadAll(conn)
+	if err != nil {
+		log.Panic(err)
+	}
+	command := bytesToCommand(request[:commandLength])
+	fmt.Printf("Received %s command\n", command)
+
+	switch command {
+	case "block":
+		handleBlock(request, bc)
+	case "getblocks":
+		handleGetBlocks(request, bc)
+	case "getdata":
+		handleGetData(request, bc)
+	case "inv":
+		handleInv(request, bc)
+	case "version":
+		handleVersion(request, bc)
+	case "tx":
+		handleTx(request, bc)
+	default:
+		fmt.Println("Unknown command!")
+	}
+
+	conn.Close()
 }
 
 func handleGetBlocks(request []byte, bc *blockchain.Blockchain) {
@@ -162,5 +164,70 @@ func handleVersion(request []byte, bc *blockchain.Blockchain) {
 
 	if nodeIsKnown(payload.AddrFrom) == false {
 		knownNodes = append(knownNodes, payload.AddrFrom)
+	}
+}
+
+func handleTx(request []byte, bc *blockchain.Blockchain) {
+	var payload tx
+	var tx transaction.Transaction
+	err := utils.Deserialize(nil, request[commandLength:], &payload)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	txData := payload.Transaction
+	err = utils.Deserialize(nil, txData, &tx)
+	if err != nil {
+		log.Panic(err)
+	}
+	memPool[hex.EncodeToString(tx.ID)] = tx
+
+	if nodeAddress == knownNodes[0] {
+		for _, node := range knownNodes {
+			if node != nodeAddress && node != payload.AddrFrom {
+				sendInv(node, "tx", [][]byte{tx.ID})
+			}
+		}
+	} else {
+		if len(memPool) >= 2 && len(miningAddress) > 0 {
+		MineTransactions:
+			var txs []*transaction.Transaction
+
+			for id := range memPool {
+				tx := memPool[id]
+				if bc.VerifyTransaction(&tx) == true {
+					txs = append(txs, &tx)
+				}
+			}
+
+			if len(txs) == 0 {
+				fmt.Println("All transactions are invalid, waiting for new ones...")
+				return
+			}
+
+			cbTx := transaction.NewCoinbaseTX(miningAddress, "")
+			txs = append(txs, cbTx)
+
+			newBlock := bc.MineBlock(txs)
+			UTXOSet := utxoset.UTXOSet{Blockchain: bc}
+			UTXOSet.Reindex()
+
+			fmt.Println("New block is mined!")
+
+			for _, tx := range txs {
+				txID := hex.EncodeToString(tx.ID)
+				delete(memPool, txID)
+			}
+
+			for _, node := range knownNodes {
+				if node != nodeAddress {
+					sendInv(node, "block", [][]byte{newBlock.Hash})
+				}
+			}
+
+			if len(memPool) > 0 {
+				goto MineTransactions
+			}
+		}
 	}
 }
