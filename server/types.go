@@ -21,6 +21,11 @@ type inv struct {
 	Items    [][]byte
 }
 
+type tx struct {
+	AddrFrom    string
+	Transaction []byte
+}
+
 type version struct {
 	Version    int
 	BestHeight int

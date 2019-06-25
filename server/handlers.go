@@ -70,6 +70,13 @@ func handleGetData(request []byte, bc *blockchain.Blockchain) {
 
 		sendBlock(payload.AddrFrom, &block)
 	}
+
+	if payload.Type == "tx" {
+		txID := hex.EncodeToString(payload.ID)
+		tx := memPool[txID]
+
+		sendTx(payload.AddrFrom, &tx)
+	}
 }
 
 func handleInv(request []byte, bc *blockchain.Blockchain) {

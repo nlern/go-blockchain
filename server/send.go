@@ -7,6 +7,8 @@ import (
 	"log"
 	"net"
 
+	"github.com/nlern/go-blockchain/transaction"
+
 	blck "github.com/nlern/go-blockchain/block"
 	"github.com/nlern/go-blockchain/blockchain"
 	"github.com/nlern/go-blockchain/utils"
@@ -76,6 +78,19 @@ func sendInv(address string, kind string, items [][]byte) {
 	}
 
 	request := append(commandToBytes("inv"), payload...)
+
+	sendData(address, request)
+}
+
+func sendTx(address string, tnx *transaction.Transaction) {
+	data := tx{address, tnx.Serialize()}
+
+	payload, err := utils.Serialize(nil, data)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	request := append(commandToBytes("tx"), payload...)
 
 	sendData(address, request)
 }
