@@ -1,5 +1,10 @@
 package server
 
+type block struct {
+	AddrFrom string
+	Block    []byte
+}
+
 type getBlocks struct {
 	AddrFrom string
 }

@@ -31,6 +31,8 @@ func handleConnection(conn net.Conn, bc *blockchain.Blockchain) {
 	switch command {
 	case "getblocks":
 		handleGetBlocks(request, bc)
+	case "getdata":
+		handleGetData(request, bc)
 	case "inv":
 		handleInv(request, bc)
 	case "version":
@@ -51,6 +53,23 @@ func handleGetBlocks(request []byte, bc *blockchain.Blockchain) {
 
 	blocks := bc.GetBlockHashes()
 	sendInv(payload.AddrFrom, "block", blocks)
+}
+
+func handleGetData(request []byte, bc *blockchain.Blockchain) {
+	var payload getData
+	err := utils.Deserialize(nil, request[commandLength:], &payload)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	if payload.Type == "block" {
+		block, err := bc.GetBlock([]byte(payload.ID))
+		if err != nil {
+			return
+		}
+
+		sendBlock(payload.AddrFrom, &block)
+	}
 }
 
 func handleInv(request []byte, bc *blockchain.Blockchain) {

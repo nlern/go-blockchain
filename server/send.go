@@ -7,9 +7,21 @@ import (
 	"log"
 	"net"
 
+	blck "github.com/nlern/go-blockchain/block"
 	"github.com/nlern/go-blockchain/blockchain"
 	"github.com/nlern/go-blockchain/utils"
 )
+
+func sendBlock(address string, b *blck.Block) {
+	data := block{address, b.Serialize()}
+	payload, err := utils.Serialize(nil, data)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	request := append(commandToBytes("block"), payload...)
+	sendData(address, request)
+}
 
 func sendData(address string, data []byte) {
 	conn, err := net.Dial(protocol, address)
