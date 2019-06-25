@@ -30,6 +30,42 @@ func (bc *Blockchain) CloseDB() {
 	bc.db.Close()
 }
 
+// AddBlock saves the block into the blockchain
+func (bc *Blockchain) AddBlock(blck *block.Block) {
+	err := bc.db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(blocksBucket))
+		blockInDb := bucket.Get(blck.Hash)
+
+		if blockInDb != nil {
+			return nil
+		}
+
+		blockData := blck.Serialize()
+		err := bucket.Put(blck.Hash, blockData)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		lastHash := bucket.Get([]byte("l"))
+		lastBlockData := bucket.Get(lastHash)
+		lastBlock := block.DeserializeBlock(lastBlockData)
+
+		if blck.Height > lastBlock.Height {
+			err := bucket.Put([]byte("l"), blck.Hash)
+			if err != nil {
+				log.Panic(err)
+			}
+			bc.tip = blck.Hash
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		log.Panic(err)
+	}
+}
+
 // FindTransaction finds a transaction by its id
 func (bc *Blockchain) FindTransaction(ID []byte) (transaction.Transaction, error) {
 	bci := bc.Iterator()

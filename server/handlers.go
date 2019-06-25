@@ -8,6 +8,10 @@ import (
 	"log"
 	"net"
 
+	"github.com/nlern/go-blockchain/utxoset"
+
+	blck "github.com/nlern/go-blockchain/block"
+
 	"github.com/nlern/go-blockchain/transaction"
 
 	"github.com/nlern/go-blockchain/utils"
@@ -29,6 +33,8 @@ func handleConnection(conn net.Conn, bc *blockchain.Blockchain) {
 	fmt.Printf("Received %s command\n", command)
 
 	switch command {
+	case "block":
+		handleBlock(request, bc)
 	case "getblocks":
 		handleGetBlocks(request, bc)
 	case "getdata":
@@ -42,6 +48,32 @@ func handleConnection(conn net.Conn, bc *blockchain.Blockchain) {
 	}
 
 	conn.Close()
+}
+
+func handleBlock(request []byte, bc *blockchain.Blockchain) {
+	var payload block
+	err := utils.Deserialize(nil, request[commandLength:], &payload)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	blockData := payload.Block
+	block := blck.DeserializeBlock(blockData)
+
+	fmt.Println("Received a new block")
+	bc.AddBlock(block)
+
+	fmt.Printf("Added block %x\n", block.Hash)
+
+	if len(blocksInTransit) > 0 {
+		blockHash := blocksInTransit[0]
+		sendGetData(payload.AddrFrom, "block", blockHash)
+
+		blocksInTransit = blocksInTransit[1:]
+	} else {
+		UTXOSet := utxoset.UTXOSet{Blockchain: bc}
+		UTXOSet.Reindex()
+	}
 }
 
 func handleGetBlocks(request []byte, bc *blockchain.Blockchain) {
